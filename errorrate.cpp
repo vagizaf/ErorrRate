@@ -6,28 +6,64 @@ cErrorRate::cErrorRate(QObject *parent) : QObject(parent)
     frames = 0;
 }
 
+/*
+ * Добавление данных о текущем количестве переданных
+ *  и потерянных кадров с указанием
+ * текущего времени в секундах
+ *
+ * * Ожидается, что время и количество фрэймов с каждым вызовом функции
+ *  только увеличиватеся
+ */
 void cErrorRate::setItem(int time, int fr, int lFr)
 {
+    //расчёт rate в текущей отметке времени (метка)
     double rate = (lFr - lostFrames)/static_cast<double>(fr - frames);
+
+    //запись метки в контейнер
     statRates[time] = rate;
+
+    //запомнить для расчёта следующей метки
     lostFrames = lFr;
     frames = fr;
 }
 
+/*
+ *   Текущее значение error rate для текущего времени в секундах с указанием
+ *    продолжительности временного окна в секундах
+ */
 double cErrorRate::getER(int curTime, int period)
 {
     double result = 0;
 
-    std::map<int, double>::iterator low, high;
-    int pos = curTime - period;
-    low = statRates.lower_bound(pos);
-    high = statRates.upper_bound(pos);
+    std::map<int, double>::iterator begin, end;
+    int start = curTime - period;
 
-    int timelow = low->first;
-    int timehigh = high->first;
-    double rate = high->second;
+    // поиск первой отметки времени в периоде
+    begin = statRates.upper_bound(start);
 
-    result = rate;//  / (timehigh - timelow);
+    //поиск последней отметки времени в заданном периоде
+    end = statRates.upper_bound(curTime);
+    --end;
 
-    return result;
+    //расчёт вклада в ER от "неполной" метки
+    result += begin->second * (begin->first - start);
+
+    //время прошлой метки
+    int lastTime = begin->first;
+
+    //суммирование всех последующих rates с учётом интервала времени
+    for(auto it = ++begin; it != statRates.end(); lastTime = it->first, ++it)
+    {
+        if(it->first <= curTime)
+        {
+            result += (it->second * (it->first - lastTime));
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    //вычисление ER (усреднение) - деление на суммарное время по меткам
+    return result/(end->first - start);
 }
