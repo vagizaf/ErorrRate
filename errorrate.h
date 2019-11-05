@@ -14,6 +14,7 @@ class cErrorRate : public QObject
 
 public:
     explicit cErrorRate(QObject *parent = nullptr);
+    void clear();
     void setItem(int time, int frames, int lostFrames);
     double getER(int curTime, int period);
 

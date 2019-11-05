@@ -25,6 +25,8 @@ private slots:
 
     void on_pushButton_GetER_clicked();
 
+    void on_spinBox_CurrentTime_valueChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     cErrorRate errRate;

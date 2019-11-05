@@ -6,6 +6,12 @@ cErrorRate::cErrorRate(QObject *parent) : QObject(parent)
     frames = 0;
 }
 
+
+void cErrorRate::clear()
+{
+    statRates.clear();
+}
+
 /*
  * Добавление данных о текущем количестве переданных
  *  и потерянных кадров с указанием
@@ -54,14 +60,7 @@ double cErrorRate::getER(int curTime, int period)
     //суммирование всех последующих rates с учётом интервала времени
     for(auto it = ++begin; it != statRates.end(); lastTime = it->first, ++it)
     {
-        if(it->first <= curTime)
-        {
-            result += (it->second * (it->first - lastTime));
-        }
-        else
-        {
-            break;
-        }
+        result += (it->second * (it->first - lastTime));
     }
 
     //вычисление ER (усреднение) - деление на суммарное время по меткам
